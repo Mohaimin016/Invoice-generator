@@ -1,19 +1,22 @@
 // Invoice Portal – service worker (offline support)
 // After changing any file, bump CACHE_VERSION so users get the new version.
-const CACHE_VERSION = "invoice-portal-v2";
+const CACHE_VERSION = "invoice-portal-v3";
 const APP_FILES = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/icon-maskable-512.png",
-  "./icons/apple-touch-icon.png",
-  "./icons/favicon-32.png"
+  "./icon-192.png",
+  "./icon-512.png",
+  "./icon-maskable-512.png",
+  "./apple-touch-icon.png",
+  "./favicon-32.png"
 ];
 
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE_VERSION).then(cache => cache.addAll(APP_FILES)));
+  // cache files one by one, so one missing file never stops the app from installing
+  event.waitUntil(caches.open(CACHE_VERSION).then(cache =>
+    Promise.all(APP_FILES.map(f => cache.add(f).catch(() => {})))
+  ));
   self.skipWaiting();
 });
 

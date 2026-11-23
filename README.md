@@ -11,13 +11,12 @@ Contact & Support: Mohaimin Al Islam Siddike
 | `index.html` | The app (sign-in, invoice, Excel import, print) |
 | `manifest.webmanifest` | App name, colours and icons for installing |
 | `service-worker.js` | Offline support (caches the app) |
-| `icons/` | App icons (192, 512, maskable, Apple, favicon) |
-| `.nojekyll` | Tells GitHub Pages to serve the files as they are |
+| `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png`, `favicon-32.png` | App icons |
 
 ## Publish on GitHub Pages
 
 1. Create a new repository on GitHub (for example `invoice-portal`).
-2. Upload **all** files and the `icons` folder to the root of the repository (Add file → Upload files → drag the whole folder contents → Commit).
+2. Unzip, then in the repository click **Add file → Upload files**, select **all 9 files** (Ctrl+A in the unzipped folder) and **Commit**. There are no sub-folders.
 3. Go to **Settings → Pages**. Under *Build and deployment* choose **Deploy from a branch**, branch **main**, folder **/ (root)**, then **Save**.
 4. After 1–2 minutes the site is live at `https://<your-username>.github.io/invoice-portal/`.
 
