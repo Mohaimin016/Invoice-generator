@@ -81,6 +81,15 @@
   #login input { border: 1px solid #bbb; border-radius: 4px; padding: 8px; font-size: 14px; }
   #login button { margin-top: 16px; width: 100%; background: #1f2a44; color: #fff; border: 0; border-radius: 4px; padding: 9px; font-size: 14px; font-weight: bold; cursor: pointer; }
   #login .support { margin-top: 14px; padding-top: 10px; border-top: 1px solid #e3e3e3; font-size: 12px; color: #555; text-align: center; }
+  #login .lgInstall { background: #fff; color: #1f2a44; border: 1px solid #1f2a44; margin-top: 8px; }
+  #installHelp { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; font-family: Arial, sans-serif; }
+  #installHelp .box { background: #fff; border-radius: 8px; padding: 22px 24px; width: 420px; max-width: 92vw; font-size: 13px; color: #222; }
+  #installHelp h3 { margin: 0 0 10px; color: #1f2a44; }
+  #installHelp ol { margin: 6px 0 12px 18px; padding: 0; line-height: 1.6; }
+  #installHelp .lbl2 { font-weight: bold; margin-top: 6px; }
+  #installHelp ul { list-style: none; padding: 0; margin: 6px 0 14px; line-height: 1.7; }
+  #installHelp .ok { color: #1e8e3e; } #installHelp .bad { color: #c0392b; }
+  #installHelp button { background: #1f2a44; color: #fff; border: 0; border-radius: 4px; padding: 8px 16px; cursor: pointer; font-weight: bold; }
   #loginErr { color: #c0392b; font-size: 12px; margin-top: 8px; min-height: 14px; }
   body.locked .toolbar, body.locked .page { display: none; }
 
@@ -98,6 +107,16 @@
 </head>
 <body class="locked">
 
+<div id="installHelp" style="display:none">
+  <div class="box">
+    <h3>Install Invoice Portal</h3>
+    <div id="ihSteps"></div>
+    <div class="lbl2">Install check</div>
+    <ul id="ihChecks"><li>Checking…</li></ul>
+    <button type="button" onclick="$('installHelp').style.display='none'">Close</button>
+  </div>
+</div>
+
 <div id="login">
   <form onsubmit="doLogin(event)">
     <h2>Invoice Portal – Sign in</h2>
@@ -106,6 +125,7 @@
     <label>Password</label>
     <input id="lgPass" type="password" autocomplete="current-password" required>
     <button type="submit">Sign in</button>
+    <button type="button" class="installBtn lgInstall" onclick="installApp()">⬇ Install app</button>
     <div id="loginErr"></div>
     <div class="support">Contact &amp; Support: Mohaimin Al Islam Siddike</div>
   </form>
@@ -118,7 +138,7 @@
   <button onclick="addRow()">+ Add Description</button>
   <button onclick="window.print()">Print / Save PDF</button>
   <button onclick="newInvoice()">New invoice (clear)</button>
-  <button id="installBtn" style="display:none" onclick="installApp()">Install app</button>
+  <button class="installBtn" onclick="installApp()">⬇ Install app</button>
   <button onclick="logout()">Log out</button>
   <span class="hint">Totals calculate automatically · your entries are kept in this browser</span>
 </div>
@@ -641,15 +661,66 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js").catch(() => {}));
 }
 let installPrompt = null;
-window.addEventListener("beforeinstallprompt", e => {
-  e.preventDefault(); installPrompt = e; $("installBtn").style.display = "";
-});
-async function installApp() {
-  if (!installPrompt) return;
-  installPrompt.prompt(); await installPrompt.userChoice;
-  installPrompt = null; $("installBtn").style.display = "none";
+const isInstalled = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+function setInstallButtons() {
+  document.querySelectorAll(".installBtn").forEach(b => b.style.display = isInstalled() ? "none" : "");
 }
-window.addEventListener("appinstalled", () => { $("installBtn").style.display = "none"; });
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installPrompt = e; });
+window.addEventListener("appinstalled", () => { installPrompt = null; setInstallButtons(); });
+setInstallButtons();
+
+async function installApp() {
+  if (installPrompt) {                     // Chrome / Edge offered the install dialog
+    installPrompt.prompt();
+    await installPrompt.userChoice;
+    installPrompt = null; setInstallButtons();
+    return;
+  }
+  showInstallHelp();                       // otherwise explain how to install + check the setup
+}
+
+function showInstallHelp() {
+  const ua = navigator.userAgent;
+  const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const android = /Android/.test(ua);
+  const edge = /Edg\//.test(ua), chrome = /Chrome\//.test(ua) && !edge, firefox = /Firefox\//.test(ua);
+  const safari = /Safari\//.test(ua) && !/Chrome|CriOS|Edg/.test(ua);
+  let steps;
+  if (ios) steps = safari
+    ? "<ol><li>Tap the <b>Share</b> button (square with arrow).</li><li>Tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol>"
+    : "<ol><li>On iPhone/iPad the app can only be installed from <b>Safari</b>.</li><li>Open this link in Safari, then Share → <b>Add to Home Screen</b>.</li></ol>";
+  else if (android) steps = "<ol><li>Tap the <b>⋮</b> menu at the top right of Chrome.</li><li>Tap <b>Add to Home screen</b> or <b>Install app</b>.</li></ol>";
+  else if (edge) steps = "<ol><li>Click the <b>…</b> menu at the top right of Edge.</li><li>Choose <b>Apps → Install this site as an app</b>.</li></ol>";
+  else if (chrome) steps = "<ol><li>Look for the <b>install icon</b> (monitor with ↓) at the right end of the address bar, and click it.</li><li>Or click the <b>⋮</b> menu → <b>Cast, save and share → Install page as app</b> (older Chrome: <b>Install Invoice Portal…</b>).</li></ol>";
+  else if (firefox) steps = "<ol><li>Firefox on computers can't install web apps.</li><li>Open this link in <b>Chrome</b> or <b>Edge</b> and click Install app again.</li></ol>";
+  else if (safari) steps = "<ol><li>On Mac Safari: <b>File → Add to Dock</b> (macOS Sonoma or newer).</li><li>Or use Chrome / Edge.</li></ol>";
+  else steps = "<ol><li>Open this link in <b>Chrome</b> or <b>Edge</b> and click Install app again.</li></ol>";
+  $("ihSteps").innerHTML = steps;
+  $("installHelp").style.display = "flex";
+  runInstallChecks();
+}
+
+async function runInstallChecks() {
+  const out = [];
+  const row = (ok, txt) => out.push(`<li class="${ok ? "ok" : "bad"}">${ok ? "✔" : "✘"} ${txt}</li>`);
+  const https = location.protocol === "https:" || ["localhost","127.0.0.1"].includes(location.hostname);
+  row(https, https ? "Opened from a website (https)" : "Opened as a file on this computer – open the GitHub Pages link (https://…github.io/…) instead");
+  let man = null;
+  try { const r = await fetch("manifest.webmanifest", { cache: "no-store" }); if (r.ok) man = await r.json(); } catch (e) {}
+  row(!!man, man ? "manifest.webmanifest found" : "manifest.webmanifest missing – upload it to the same folder as index.html");
+  if (man) {
+    for (const ic of man.icons || []) {
+      let ok = false;
+      try { ok = (await fetch(ic.src, { cache: "no-store" })).ok; } catch (e) {}
+      row(ok, ok ? `${ic.src} found` : `${ic.src} missing – upload the <b>icons</b> folder`);
+    }
+  }
+  let sw = false;
+  try { sw = !!(await navigator.serviceWorker?.getRegistration()); } catch (e) {}
+  row(sw, sw ? "Offline support (service worker) active" : "service-worker.js not active – check it is uploaded next to index.html, then reload");
+  if (isInstalled()) row(true, "Already installed – you're using the app now");
+  $("ihChecks").innerHTML = out.join("");
+}
 </script>
 </body>
 </html>

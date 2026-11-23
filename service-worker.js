@@ -1,6 +1,6 @@
 // Invoice Portal – service worker (offline support)
 // After changing any file, bump CACHE_VERSION so users get the new version.
-const CACHE_VERSION = "invoice-portal-v1";
+const CACHE_VERSION = "invoice-portal-v2";
 const APP_FILES = [
   "./",
   "./index.html",
