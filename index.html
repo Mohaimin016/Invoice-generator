@@ -74,7 +74,9 @@
   .sigline { height: 32px; display: flex; align-items: flex-end; gap: 6px; }
 
   /* login */
-  #login { position: fixed; inset: 0; z-index: 100; background: #1f2a44; display: flex; align-items: center; justify-content: center; }
+  #login { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center;
+    /* still photo behind the sign-in box, with a navy tint so the form stays readable */
+    background: linear-gradient(rgba(31, 42, 68, .55), rgba(31, 42, 68, .55)), url("bg-plane.jpg") center / cover no-repeat, #1f2a44; }
   #login form { background: #fff; padding: 28px 30px; border-radius: 8px; width: 320px; box-shadow: 0 8px 30px rgba(0,0,0,.3); }
   #login h2 { margin: 0 0 16px; font-size: 18px; color: #1f2a44; }
   #login label { display: block; font-size: 12px; font-weight: bold; margin: 10px 0 4px; color: #333; }
